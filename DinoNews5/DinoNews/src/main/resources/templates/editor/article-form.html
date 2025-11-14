@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${article.id != null ? 'Editar Artículo' : 'Nuevo Artículo'} + ' - DinoNews'">Artículo - DinoNews</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-floating textarea {
+            min-height: 200px;
+        }
+        .preview-card {
+            border: 2px dashed #dee2e6;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-gamepad me-2"></i>DinoNews
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/editor/dashboard">Panel Editor</a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <span class="navbar-text me-3">
+                            <i class="fas fa-edit me-1"></i>
+                            <span sec:authentication="name">Editor</span>
+                        </span>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <form method="post" action="/auth/logout" class="d-inline">
+                            <button type="submit" class="btn btn-outline-light btn-sm">
+                                <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div th:if="${message}" class="alert alert-success alert-dismissible fade show m-3" role="alert">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/editor/dashboard">Panel Editor</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <span th:text="${article.id != null ? 'Editar Artículo' : 'Nuevo Artículo'}">Artículo</span>
+                        </li>
+                    </ol>
+                </nav>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2>
+                        <i class="fas" th:classappend="${article.id != null ? 'fa-edit' : 'fa-plus'}"></i>
+                        <span th:text="${article.id != null ? 'Editar Artículo' : 'Nuevo Artículo'}">Artículo</span>
+                    </h2>
+                    <a href="/editor/dashboard" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Article Form -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-newspaper me-2"></i>Información del Artículo
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body">
+                        <form method="post" th:object="${article}"
+                              th:action="${article.id != null ? '/editor/articles/' + article.id + '/edit' : '/editor/articles/new'}">
+                            
+                            <!-- Title -->
+                            <div class="form-floating mb-3">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="title" 
+                                       th:field="*{title}"
+                                       placeholder="Título del artículo"
+                                       required
+                                       maxlength="200">
+                                <label for="title">Título del Artículo *</label>
+                                <div th:if="${#fields.hasErrors('title')}" class="text-danger small">
+                                    <span th:errors="*{title}"></span>
+                                </div>
+                            </div>
+
+                            <!-- Summary -->
+                            <div class="form-floating mb-3">
+                                <textarea class="form-control" 
+                                         id="summary" 
+                                         th:field="*{summary}"
+                                         placeholder="Resumen del artículo"
+                                         required
+                                         maxlength="500"
+                                         style="height: 100px;"></textarea>
+                                <label for="summary">Resumen *</label>
+                                <div class="form-text">Máximo 500 caracteres</div>
+                                <div th:if="${#fields.hasErrors('summary')}" class="text-danger small">
+                                    <span th:errors="*{summary}"></span>
+                                </div>
+                            </div>
+
+                            <!-- Category and Image URL Row -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="category" th:field="*{category}">
+                                            <option value="">Seleccionar categoría</option>
+                                            <option value="Aventura">Aventura</option>
+                                            <option value="Acción">Acción</option>
+                                            <option value="Hardware">Hardware</option>
+                                            <option value="Indie">Indie</option>
+                                            <option value="Deportes">Deportes</option>
+                                            <option value="RPG">RPG</option>
+                                            <option value="Estrategia">Estrategia</option>
+                                            <option value="Simulación">Simulación</option>
+                                            <option value="Noticias">Noticias</option>
+                                            <option value="Reviews">Reviews</option>
+                                        </select>
+                                        <label for="category">Categoría</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="url" 
+                                               class="form-control" 
+                                               id="imageUrl" 
+                                               th:field="*{imageUrl}"
+                                               placeholder="URL de la imagen">
+                                        <label for="imageUrl">URL de la Imagen</label>
+                                        <div class="form-text">URL de la imagen principal del artículo</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="form-floating mb-3">
+                                <textarea class="form-control" 
+                                         id="content" 
+                                         th:field="*{content}"
+                                         placeholder="Contenido del artículo"
+                                         required
+                                         style="height: 300px;"></textarea>
+                                <label for="content">Contenido del Artículo *</label>
+                                <div class="form-text">Escribe el contenido completo de tu artículo aquí</div>
+                                <div th:if="${#fields.hasErrors('content')}" class="text-danger small">
+                                    <span th:errors="*{content}"></span>
+                                </div>
+                            </div>
+
+                            <!-- Published Status -->
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="published" 
+                                       th:field="*{published}">
+                                <label class="form-check-label" for="published">
+                                    <strong>Publicar artículo</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        Si está marcado, el artículo será visible públicamente. 
+                                        Si no, se guardará como borrador.
+                                    </small>
+                                </label>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>
+                                    <span th:text="${article.id != null ? 'Actualizar Artículo' : 'Crear Artículo'}">Guardar</span>
+                                </button>
+                                
+                                <a href="/editor/dashboard" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                
+                                <div th:if="${article.id != null}" class="ms-auto">
+                                    <form method="post" 
+                                          th:action="@{/editor/articles/{id}/delete(id=${article.id})}" 
+                                          class="d-inline"
+                                          onsubmit="return confirm('¿Estás seguro de que quieres eliminar este artículo?');">
+                                        <button type="submit" class="btn btn-outline-danger">
+                                            <i class="fas fa-trash me-2"></i>Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview and Tips -->
+            <div class="col-lg-4">
+                <!-- Preview Card -->
+                <div class="card preview-card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-eye me-2"></i>Vista Previa
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="preview-content">
+                            <h6 class="text-muted">Vista previa del artículo</h6>
+                            <p class="small text-muted">
+                                La vista previa aparecerá aquí cuando escribas el título y resumen.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>Consejos para escribir
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled small">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Título atractivo:</strong> Usa palabras clave que capturen la atención.
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Resumen claro:</strong> Resume lo más importante en pocas palabras.
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Contenido estructurado:</strong> Usa párrafos cortos y bien organizados.
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Imagen de calidad:</strong> Usa URLs de imágenes relevantes y de buena resolución.
+                            </li>
+                            <li>
+                                <i class="fas fa-check text-success me-2"></i>
+                                <strong>Categoría apropiada:</strong> Selecciona la categoría que mejor describa tu artículo.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-gamepad me-2"></i>DinoNews - Panel Editor</h5>
+                    <p>Creación y gestión de contenido</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 DinoNews. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Preview Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const titleInput = document.getElementById('title');
+            const summaryInput = document.getElementById('summary');
+            const categorySelect = document.getElementById('category');
+            const previewContent = document.getElementById('preview-content');
+            
+            function updatePreview() {
+                const title = titleInput.value || 'Título del artículo';
+                const summary = summaryInput.value || 'Resumen del artículo...';
+                const category = categorySelect.value || 'Sin categoría';
+                
+                previewContent.innerHTML = `
+                    <div class="mb-2">
+                        <span class="badge bg-primary">${category}</span>
+                    </div>
+                    <h6 class="fw-bold">${title}</h6>
+                    <p class="small text-muted mb-0">${summary}</p>
+                `;
+            }
+            
+            titleInput.addEventListener('input', updatePreview);
+            summaryInput.addEventListener('input', updatePreview);
+            categorySelect.addEventListener('change', updatePreview);
+            
+            // Initial preview
+            updatePreview();
+        });
+    </script>
+</body>
+</html>

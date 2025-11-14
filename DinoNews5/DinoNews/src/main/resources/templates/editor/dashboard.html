@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Editor - DinoNews</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-gamepad me-2"></i>DinoNews
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/editor/dashboard">Panel Editor</a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <span class="navbar-text me-3">
+                            <i class="fas fa-edit me-1"></i>
+                            <span sec:authentication="name">Editor</span>
+                        </span>
+                    </li>
+                    
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/admin/dashboard">
+                            <i class="fas fa-cog me-1"></i>Admin
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <form method="post" action="/auth/logout" class="d-inline">
+                            <button type="submit" class="btn btn-outline-light btn-sm">
+                                <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div th:if="${message}" class="alert alert-success alert-dismissible fade show m-3" role="alert">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Welcome Header -->
+            <div class="col-12 mb-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h2 class="card-title mb-2">
+                                    <i class="fas fa-edit me-2"></i>Bienvenido, <span sec:authentication="name">Editor</span>
+                                </h2>
+                                <p class="card-text mb-0">
+                                    Aquí puedes gestionar tus artículos, crear nuevas noticias y revisar tu contenido publicado.
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <a href="/editor/articles/new" class="btn btn-light btn-lg">
+                                    <i class="fas fa-plus me-2"></i>Nuevo Artículo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Quick Actions -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/editor/articles/new" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>Crear Nuevo Artículo
+                            </a>
+                            <a href="/" class="btn btn-outline-primary">
+                                <i class="fas fa-home me-2"></i>Ver Sitio Web
+                            </a>
+                            <a href="/h2-console" target="_blank" class="btn btn-outline-info">
+                                <i class="fas fa-database me-2"></i>Base de Datos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Articles -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-newspaper me-2"></i>Mis Artículos
+                        </h5>
+                        <span class="badge bg-primary">
+                            Total: <span th:text="${articles.totalElements}">0</span>
+                        </span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- Articles List -->
+                        <div th:if="${!articles.content.isEmpty()}">
+                            <div th:each="article : ${articles.content}" class="border-bottom pb-3 mb-3">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 class="mb-1" th:text="${article.title}">Título del artículo</h6>
+                                        <p class="text-muted small mb-2" th:text="${#strings.abbreviate(article.summary, 100)}">
+                                            Resumen del artículo...
+                                        </p>
+                                        <div>
+                                            <span class="badge bg-info me-2" 
+                                                  th:text="${article.category ?: 'Sin categoría'}"
+                                                  th:if="${article.category != null and !article.category.isEmpty()}">
+                                                Categoría
+                                            </span>
+                                            <span class="badge bg-success me-2" th:if="${article.published}">Publicado</span>
+                                            <span class="badge bg-warning me-2" th:unless="${article.published}">Borrador</span>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                <span th:text="${#temporals.format(article.createdAt, 'dd/MM/yyyy')}">Fecha</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a th:href="@{/news/{id}(id=${article.id})}" 
+                                               class="btn btn-outline-info"
+                                               target="_blank"
+                                               title="Ver artículo">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a th:href="@{/editor/articles/{id}/edit(id=${article.id})}" 
+                                               class="btn btn-outline-primary"
+                                               title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="post" 
+                                                  th:action="@{/editor/articles/{id}/delete(id=${article.id})}" 
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('¿Estás seguro de que quieres eliminar este artículo?');">
+                                                <button type="submit" 
+                                                        class="btn btn-outline-danger"
+                                                        title="Eliminar">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div th:if="${articles.content.isEmpty()}" class="text-center py-4">
+                            <i class="fas fa-newspaper fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">No tienes artículos aún</h4>
+                            <p class="text-muted">¡Comienza creando tu primer artículo!</p>
+                            <a href="/editor/articles/new" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Crear Primer Artículo
+                            </a>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav th:if="${articles.totalPages > 1}" aria-label="Navegación de páginas">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/editor/dashboard(page=${currentPage - 1})}">
+                                        Anterior
+                                    </a>
+                                </li>
+                                
+                                <li th:each="pageNum : ${#numbers.sequence(0, articles.totalPages - 1)}" 
+                                    class="page-item" 
+                                    th:classappend="${pageNum == currentPage} ? 'active'">
+                                    <a class="page-link" 
+                                       th:href="@{/editor/dashboard(page=${pageNum})}"
+                                       th:text="${pageNum + 1}">1</a>
+                                </li>
+                                
+                                <li class="page-item" th:classappend="${currentPage == articles.totalPages - 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/editor/dashboard(page=${currentPage + 1})}">
+                                        Siguiente
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-gamepad me-2"></i>DinoNews - Panel Editor</h5>
+                    <p>Creación y gestión de contenido</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2025 DinoNews. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
